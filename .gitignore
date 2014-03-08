@@ -50,3 +50,5 @@ nosetests.xml
 *.lai
 *.la
 *.a
+
+player

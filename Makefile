@@ -1,17 +1,21 @@
 
+CC=g++
+
+CFLAGS=-c -std=c++11
+
 all: player
 
 player: main.o player.o json.o
-	g++ main.o player.o json.o -o player
+	$(CC) main.o player.o json.o -o player
 
 main.o:
-	g++ -c main.cpp
+	$(CC) $(CFLAGS) main.cpp
 
 player.o: 
-	g++ -c player.cpp
+	$(CC) $(CFLAGS) player.cpp
 
 json.o:
-	g++ -c json.cpp
+	$(CC) $(CFLAGS) json.cpp
 
 clean:
 	rm -rf *.o player
