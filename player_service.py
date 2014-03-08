@@ -1,13 +1,11 @@
 import time
 import cgi
 import json
+import os
 import BaseHTTPServer
-from player import Player
-
 
 HOST_NAME = 'localhost'
-PORT_NUMBER = 9000
-
+PORT_NUMBER = 9300
 
 class PlayerService(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -26,14 +24,15 @@ class PlayerService(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             postvars = {}
 
-        game_state = json.loads(postvars['game_state'][0])
+        game_state = postvars['game_state'][0]
         action = postvars['action'][0]
 
-        response = ''
-        if action == 'bet_request':
-            response = Player().betRequest(game_state)
-        elif action == 'showdown':
-            Player().showdown(game_state)
+        w, r = os.popen2("./player " + action)
+       
+        w.write(game_state)
+        w.close()
+
+        response = r.read()
 
         self.wfile.write(response)
 
