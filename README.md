@@ -1,4 +1,4 @@
-poker-player-python
-===================
+poker-player-cpp
+================
 
-Python client skeleton for Lean Poker For more information visit: http://leanpoker.org 
+C++ client skeleton for Lean Poker For more information visit: http://leanpoker.org
