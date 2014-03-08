@@ -24,12 +24,14 @@ class PlayerService(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             postvars = {}
 
-        game_state = postvars['game_state'][0]
         action = postvars['action'][0]
 
         w, r = os.popen2("./player " + action)
-       
-        w.write(game_state)
+
+        if 'game_state' in postvars
+            game_state = postvars['game_state'][0]
+            w.write(game_state)
+
         w.close()
 
         response = r.read()
