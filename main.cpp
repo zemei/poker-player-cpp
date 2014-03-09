@@ -21,6 +21,10 @@ int main(int argc, char* argv[])
     {
         Player::showdown(game_state);
     }
+    else if(action == "version")
+    {
+        cout << Player::VERSION;
+    }
 
     return 0;
 }
