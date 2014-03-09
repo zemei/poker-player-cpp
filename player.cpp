@@ -1,6 +1,6 @@
 #include "player.h"
 
-const char* Player::VERSION = "Default c++ folding player";
+const char* Player::VERSION = "Default C++ folding player";
 
 int Player::betRequest(json::Value game_state)
 {
