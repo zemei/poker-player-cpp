@@ -35,11 +35,12 @@ bool HandEvaluator::selfTest(){
         testRange.push_back(CardType::_2);
         testRange.push_back(CardType::SUITED);
 
-		if( !DUT.isHigherOrEqual( testState, testRange ) ) {
+        if( !DUT.isHigherOrEqual( testState, testRange ) ) {
 			std::cout << "Range Test 0 failed " << std::endl;
 			testResult = false;
 		}
     }
+
     //TC 1
     {
         GameState testState;
@@ -50,7 +51,7 @@ bool HandEvaluator::selfTest(){
         testRange.push_back(CardType::_2);
         testRange.push_back(CardType::SUITED);
 
-		if( !DUT.isHigherOrEqual( testState, testRange ) ) {
+        if( DUT.isHigherOrEqual( testState, testRange ) ) {
 			std::cout << "Range Test 1 failed " << std::endl;
 			testResult = false;
 		}
@@ -81,38 +82,11 @@ bool HandEvaluator::selfTest(){
         testRange.push_back(CardType::K);
         testRange.push_back(CardType::_10);
 
-		if( !DUT.isHigherOrEqual( testState, testRange ) ) {
+        if( DUT.isHigherOrEqual( testState, testRange ) ) {
 			std::cout << "Range Test 3 failed " << std::endl;
 			testResult = false;
 		}
     }
-
-	StrategyManager strategyManager;
-	initStrategies( strategyManager );
-
-	//test 1
-	{
-		GameState testState;
-		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
-		testState.hand_cards.push_back( { CardType::A, CardColor::SPADES } );
-		Action action = strategyManager.execute( testState );
-		if( action.mType != ActionType::ALL_IN ) {
-			std::cout << "Strategy Test 1 failed " << std::endl;
-			testResult = false;
-		}
-	}
-
-	//test 2
-	{
-		GameState testState;
-		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
-		testState.hand_cards.push_back( { CardType::A, CardColor::SPADES } );
-		Action action = strategyManager.execute( testState );
-		if( action.mType != ActionType::ALL_IN ) {
-			std::cout << "Strategy Test 2 failed " << std::endl;
-			testResult = false;
-		}
-	}
 
     if(testResult){
         std::cout << "Self Test OK" << std::endl;
@@ -242,12 +216,15 @@ CardColor decodeCardColor(std::string s)
 bool Player::fillState(GameState& gs, json::Value game_state)
 {
     gs.small_blind = game_state["small_blind"].ToInt();
+    gs.call_value = game_state["current_buy_in"].ToInt();
 
     const int players_length = game_state["players"].ToArray().size();
     const int dealer_index = game_state["dealer"].ToInt();
     const int me_index = game_state["in_action"].ToInt();
     json::Value me = game_state["players"].ToArray()[me_index];
     gs.stack = me["stack"];
+
+    gs.call_value -= me["bet"].ToInt();
 
     gs.has_A = me["hole_cards"].ToArray()[0]["rank"].ToString() == "A" || me["hole_cards"].ToArray()[1]["rank"].ToString() == "A";
     gs.has_pair = me["hole_cards"].ToArray()[0]["rank"].ToString() == me["hole_cards"].ToArray()[1]["rank"].ToString();
@@ -312,35 +289,57 @@ int Player::betRequest(json::Value game_state)
     GameState gs;
     fillState(gs, game_state);
 
+    /*StrategyManager manager;
+    initStrategies(manager);
+    Action action = manager.execute(gs);
+    switch (action.mType) {
+        case ActionType::ALL_IN:
+            return 1000;
+        case ActionType::CALL:
+            return gs.call_value;
+        case ActionType::FOLD:
+            return 0;
+    }*/
+
     //return (gs.has_A || gs.has_pair )? 1000 : 0;
-    return ((gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type > CardType::J) ||
-            (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type > CardType::J) ||
-            (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type > CardType::Q && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
-            (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type > CardType::Q && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
+    if (gs.action >= ActionType::RAISE_1 &&
+            (
+                (gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type >= CardType::Q) ||
+                (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type >= CardType::Q) ||
+                (gs.has_pair && gs.hand_cards[0].type >= CardType::J)
+            )
+        )
+    {
+        return 1000;
+    }
+    return ((gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type >= CardType::J) ||
+            (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type >= CardType::J) ||
+            (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type >= CardType::Q && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
+            (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type >= CardType::Q && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
             //(gs.hand_cards[0].type == CardType::Q && gs.hand_cards[1].type > CardType::J && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
             //(gs.hand_cards[1].type == CardType::Q && gs.hand_cards[0].type > CardType::J && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
-            (gs.has_pair && gs.hand_cards[0].type > CardType::_9)) ? 1000 :
+            (gs.has_pair && gs.hand_cards[0].type >= CardType::_9)) ? 1000 :
             (
                 (
                     (gs.position == PositionType::D) &&
                     (gs.action == ActionType::FOLD || gs.action == ActionType::CALL) &&
                     (
-                        (gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type > CardType::_6) ||
-                        (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type > CardType::_6) ||
-                        (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type > CardType::_10 && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
-                        (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type > CardType::_10 && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
-                        (gs.has_pair && gs.hand_cards[0].type > CardType::_5)
+                        (gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type >= CardType::_6) ||
+                        (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type >= CardType::_6) ||
+                        (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type >= CardType::_10 && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
+                        (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type >= CardType::_10 && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
+                        (gs.has_pair && gs.hand_cards[0].type >= CardType::_5)
                     )
                 ) ||
                 (
                     (gs.position == PositionType::SB || gs.position == PositionType::BB) &&
                     (gs.action == ActionType::FOLD || gs.action == ActionType::CALL) &&
                     (
-                        (gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type > CardType::_2) ||
-                        (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type > CardType::_2) ||
-                        (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type > CardType::_9) ||
-                        (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type > CardType::_9) ||
-                        (gs.has_pair && gs.hand_cards[0].type > CardType::_2)
+                        (gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type >= CardType::_2) ||
+                        (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type >= CardType::_2) ||
+                        (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type >= CardType::_9) ||
+                        (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type >= CardType::_9) ||
+                        (gs.has_pair && gs.hand_cards[0].type >= CardType::_2)
                     )
                 )? 1000 : 0
             );

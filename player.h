@@ -15,7 +15,8 @@ enum class ConditionType
     ACTION_ON_POS,
     BB_HIGHER,
     BB_LOWER,
-    NR_OF_PLAYERS,
+    MORE_PLAYER,
+    LESS_PLAYER,
 };
 
 enum class CardType
@@ -102,6 +103,7 @@ struct GameState {
     int small_blind;
     int stack;
     int player_num;
+    int call_value;
 
     bool has_A;
     bool has_pair;

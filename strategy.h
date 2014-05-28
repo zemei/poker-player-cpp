@@ -5,6 +5,7 @@
 
 #include <initializer_list>
 #include <vector>
+#include <iostream>
 
 class Action
 {
@@ -110,5 +111,7 @@ public:
 };
 
 void initStrategies(StrategyManager& manager);
+
+bool strategyTest();
 
 #endif // STRATEGY_H
