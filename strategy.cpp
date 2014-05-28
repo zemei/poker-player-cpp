@@ -20,10 +20,11 @@ bool Condition::evaluate(const GameState& state)
             if (mArguments.size() == 0)
                 return false;
 
+			std::vector<CardType> cardSet;
+
             //bool isSuited = false;
             for (int i: mArguments)
             {
-                std::vector<CardType> cardSet;
                 if (i == (int)CardType::SEPARATOR)
                 {
                     if (cardSet.size() == 0)
@@ -229,76 +230,23 @@ bool strategyTest() {
 	{
 		GameState testState;
 		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
-		testState.hand_cards.push_back( { CardType::A, CardColor::SPADES } );
-
-
+		testState.hand_cards.push_back( { CardType::Q, CardColor::SPADES } );
+		testState.comm_cards.push_back( { CardType::_3, CardColor:: CLUBS } );
+		testState.comm_cards.push_back( { CardType::_5, CardColor::HEARTS } );
+		testState.comm_cards.push_back( { CardType::_9, CardColor::CLUBS } );
+		testState.position = PositionType::UTG;
+		testState.small_blind = 10;
+		testState.stack = testState.small_blind * 15 * 2 - 1;
+		
 		Action action = strategyManager.execute( testState );
-		//			Positive test							Positive test
-		if( action.mType == ActionType::FOLD || action.mType == ActionType::CHECK ) {
+
+		if( action.mType != ActionType::ALL_IN ) {
 			std::cout << "Strategy Test 0 failed " << std::endl;
 			testResult = false;
 		}
 	}
 
-	//TC 1
-	{
-		GameState testState;
-		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
-		testState.hand_cards.push_back( { CardType::J, CardColor::SPADES } );
-
-
-		Action action = strategyManager.execute( testState );
-		//			Negative test							Positive test
-		if( action.mType == ActionType::ALL_IN || action.mType == ActionType::FOLD ) {
-			std::cout << "Strategy Test 1 failed " << std::endl;
-			testResult = false;
-		}
-	}
-
-	//TC 2
-	{
-		GameState testState;
-		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
-		testState.hand_cards.push_back( { CardType::J, CardColor::HEARTS } );
-
-
-		Action action = strategyManager.execute( testState );
-		//			Positive test							Positive test
-		if( action.mType == ActionType::FOLD || action.mType == ActionType::CHECK ) {
-			std::cout << "Strategy Test 2 failed " << std::endl;
-			testResult = false;
-		}
-	}
-
-	//TC 3
-	{
-		GameState testState;
-		testState.hand_cards.push_back( { CardType::K, CardColor::HEARTS } );
-		testState.hand_cards.push_back( { CardType::_2, CardColor::SPADES } );
-
-		Action action = strategyManager.execute( testState );
-		//			Positive test							Positive test
-		if( action.mType == ActionType::FOLD || action.mType == ActionType::CHECK ) {
-			std::cout << "Strategy Test 2 failed " << std::endl;
-			testResult = false;
-		}
-	}
-
-	//TC 4
-	{
-		GameState testState;
-		testState.hand_cards.push_back( { CardType::K, CardColor::HEARTS } );
-		testState.hand_cards.push_back( { CardType::K, CardColor::SPADES } );
-		testState.comm_cards.push_back( { CardType::K, CardColor::DIAMONDS } );
-
-		Action action = strategyManager.execute( testState );
-		//			Positive test							Positive test
-		if( action.mType == ActionType::FOLD || action.mType == ActionType::CHECK ) {
-			std::cout << "Strategy Test 0 failed " << std::endl;
-			testResult = false;
-		}
-	}
-
+	
 	if( testResult ) {
 		std::cout << "StrategyManager Test OK" << std::endl;
 	} else {

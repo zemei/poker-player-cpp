@@ -2,6 +2,7 @@
 #include<string>
 #include "json.h"
 #include "player.h"
+#include "strategy.h"
 
 using namespace std;
 
@@ -16,6 +17,7 @@ int main(int argc, char* argv[])
             GameState gs;
             assert(Player::fillState(gs, json::Deserialize(json_test)));
         }
+		assert( strategyTest() );
         return 0;
     }
     string action = argv[1];

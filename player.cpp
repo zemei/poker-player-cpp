@@ -88,6 +88,21 @@ bool HandEvaluator::selfTest(){
 		}
     }
 
+    //TC 3
+    {
+        GameState testState;
+        testState.hand_cards.push_back({CardType::K, CardColor::HEARTS});
+        testState.hand_cards.push_back({CardType::K, CardColor::SPADES});
+        std::vector<CardType> testRange;
+        testRange.push_back(CardType::_10);
+        testRange.push_back(CardType::_10);
+
+        if( !DUT.isHigherOrEqual( testState, testRange ) ) {
+            std::cout << "Range Test 4 failed " << std::endl;
+            testResult = false;
+        }
+    }
+
     if(testResult){
         std::cout << "Self Test OK" << std::endl;
     } else {
@@ -135,7 +150,11 @@ bool HandEvaluator::isHigherOrEqual(const GameState &currentState, std::vector<C
 
 //PRIVATE interface
 bool HandEvaluator::checkInRange(std::vector<CardType> handVec, std::vector<CardType> rangeVec){
-    return ((rangeVec[1]==handVec[1]) && (handVec[0]>=rangeVec[0]));
+    if(rangeVec[0]==rangeVec[1]){
+        return ((handVec[0]>=rangeVec[0]));
+    } else {
+        return ((rangeVec[1]==handVec[1]) && (handVec[0]>=rangeVec[0]));
+    }
 };
 //END of Code section for Laja
 //////////////////////////////////
@@ -232,6 +251,10 @@ bool Player::fillState(GameState& gs, json::Value game_state)
     gs.hand_cards.push_back({decodeCardType(me["hole_cards"].ToArray()[0]["rank"].ToString()), decodeCardColor(me["hole_cards"].ToArray()[0]["suit"].ToString())});
     gs.hand_cards.push_back({decodeCardType(me["hole_cards"].ToArray()[1]["rank"].ToString()), decodeCardColor(me["hole_cards"].ToArray()[1]["suit"].ToString())});
 
+    const int comm_card_num = game_state["community_cards"].size();
+    for (int i = 0; i < comm_card_num; ++i)
+        gs.comm_cards.push_back({decodeCardType(game_state["community_cards"].ToArray()[i]["rank"].ToString()), decodeCardColor(game_state["community_cards"].ToArray()[1]["suit"].ToString())});
+
     // Action
     {
         gs.action = ActionType::FOLD;
@@ -302,7 +325,7 @@ int Player::betRequest(json::Value game_state)
     }*/
 
     //return (gs.has_A || gs.has_pair )? 1000 : 0;
-    if (gs.action >= ActionType::RAISE_1 &&
+    if (gs.player_num == 5 && gs.action >= ActionType::RAISE_1 &&
             (
                 (gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type >= CardType::Q) ||
                 (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type >= CardType::Q) ||
@@ -312,6 +335,63 @@ int Player::betRequest(json::Value game_state)
     {
         return 1000;
     }
+    if (gs.player_num == 3 && gs.action >= ActionType::RAISE_1 &&
+            (
+                (gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type >= CardType::_9) ||
+                (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type >= CardType::_9) ||
+                (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type >= CardType::J) ||
+                (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type >= CardType::J) ||
+                (gs.has_pair && gs.hand_cards[0].type >= CardType::_2)
+            )
+        )
+    {
+        return 1000;
+    }
+
+    if (gs.player_num < 3 && gs.action >= ActionType::RAISE_1 &&
+            (
+                (gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type >= CardType::_2) ||
+                (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type >= CardType::_2) ||
+                (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type >= CardType::_6) ||
+                (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type >= CardType::_6) ||
+                (gs.hand_cards[0].type == CardType::Q && gs.hand_cards[1].type >= CardType::_8) ||
+                (gs.hand_cards[1].type == CardType::Q && gs.hand_cards[0].type >= CardType::_8) ||
+                (gs.hand_cards[0].type == CardType::J && gs.hand_cards[1].type >= CardType::_9) ||
+                (gs.hand_cards[1].type == CardType::J && gs.hand_cards[0].type >= CardType::_9) ||
+                (gs.hand_cards[0].type == CardType::_10 && gs.hand_cards[1].type >= CardType::_9) ||
+                (gs.hand_cards[1].type == CardType::_10 && gs.hand_cards[0].type >= CardType::_9) ||
+                (gs.has_pair && gs.hand_cards[0].type >= CardType::_2)
+            )
+        )
+    {
+        return 1000;
+    }
+
+    if (gs.player_num < 3 &&
+            (
+                (gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type >= CardType::_2) ||
+                (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type >= CardType::_2) ||
+                (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type >= CardType::_6) ||
+                (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type >= CardType::_6) ||
+                (gs.hand_cards[0].type == CardType::Q && gs.hand_cards[1].type >= CardType::_8) ||
+                (gs.hand_cards[1].type == CardType::Q && gs.hand_cards[0].type >= CardType::_8) ||
+                (gs.hand_cards[0].type == CardType::J && gs.hand_cards[1].type >= CardType::_9) ||
+                (gs.hand_cards[1].type == CardType::J && gs.hand_cards[0].type >= CardType::_9) ||
+                (gs.hand_cards[0].type == CardType::_10 && gs.hand_cards[1].type >= CardType::_9) ||
+                (gs.hand_cards[1].type == CardType::_10 && gs.hand_cards[0].type >= CardType::_9) ||
+                (gs.hand_cards[0].type == CardType::_9 && gs.hand_cards[1].type >= CardType::_8) ||
+                (gs.hand_cards[1].type == CardType::_9 && gs.hand_cards[0].type >= CardType::_8) ||
+                (gs.hand_cards[0].type == CardType::_8 && gs.hand_cards[1].type >= CardType::_7) ||
+                (gs.hand_cards[1].type == CardType::_8 && gs.hand_cards[0].type >= CardType::_7) ||
+                (gs.hand_cards[0].type == CardType::_7 && gs.hand_cards[1].type >= CardType::_6) ||
+                (gs.hand_cards[1].type == CardType::_7 && gs.hand_cards[0].type >= CardType::_6) ||
+                (gs.has_pair && gs.hand_cards[0].type >= CardType::_2)
+            )
+        )
+    {
+        return 1000;
+    }
+
     return ((gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type >= CardType::J) ||
             (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type >= CardType::J) ||
             (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type >= CardType::Q && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
