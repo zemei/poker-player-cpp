@@ -292,7 +292,20 @@ int Player::betRequest(json::Value game_state)
             (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type > CardType::Q && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
             //(gs.hand_cards[0].type == CardType::Q && gs.hand_cards[1].type > CardType::J && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
             //(gs.hand_cards[1].type == CardType::Q && gs.hand_cards[0].type > CardType::J && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
-            (gs.has_pair && gs.hand_cards[0].type > CardType::_9)) ? 1000 : 0;
+            (gs.has_pair && gs.hand_cards[0].type > CardType::_9)) ? 1000 :
+            (
+                (
+                    (gs.position == PositionType::BB || gs.position == PositionType::SB || gs.position == PositionType::D) &&
+                    (gs.action == ActionType::FOLD) &&
+                    (
+                        (gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type > CardType::_6) ||
+                        (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type > CardType::_6) ||
+                        (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type > CardType::_10 && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
+                        (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type > CardType::_10 && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
+                        (gs.has_pair && gs.hand_cards[0].type > CardType::_5)
+                    )
+                ) ? 1000 : 0
+            );
 }
 
 void Player::showdown(json::Value game_state)
