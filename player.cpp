@@ -2,34 +2,126 @@
 
 #include <initializer_list>
 #include <vector>
+#include <algorithm>
+#include <iostream>
 
 //Continous delivery poker
 
 const char* Player::VERSION = "Default C++ folding player";
 
-struct Card {
-    CardType type;
-    CardColor color;
-};
-
-struct GameState {
-    int small_blind;
-    int stack;
-
-    bool has_A;
-    bool has_pair;
-
-    PositionType position;
-
-    std::vector<Card> hand_cards;
-    std::vector<Card> comm_cards;
-};
-
-
 //////////////////////////////////
 //START of Code section for Laja
 
+//PUBLIC interface
+bool HandEvaluator::selfTest(){
 
+    std::cout << "Running HandEvaluator self Test" << std::endl;
+
+    bool testResult=true;
+
+    //create Device Under Test
+    HandEvaluator DUT;
+
+    //init test input
+    //TC 0
+    {
+        GameState testState;
+        testState.hand_cards.push_back({CardType::A, CardColor::HEARTS});
+        testState.hand_cards.push_back({CardType::A, CardColor::SPADES});
+        std::vector<CardType> testRange;
+        testRange.push_back(CardType::A);
+        testRange.push_back(CardType::_2);
+        testRange.push_back(CardType::SUITED);
+
+        testResult &= DUT.isHigherOrEqual(testState, testRange);
+    }
+    //TC 1
+    {
+        GameState testState;
+        testState.hand_cards.push_back({CardType::A, CardColor::HEARTS});
+        testState.hand_cards.push_back({CardType::J, CardColor::SPADES});
+        std::vector<CardType> testRange;
+        testRange.push_back(CardType::A);
+        testRange.push_back(CardType::_2);
+        testRange.push_back(CardType::SUITED);
+
+        testResult &= !DUT.isHigherOrEqual(testState, testRange);
+    }
+
+    //TC 2
+    {
+        GameState testState;
+        testState.hand_cards.push_back({CardType::A, CardColor::HEARTS});
+        testState.hand_cards.push_back({CardType::J, CardColor::HEARTS});
+        std::vector<CardType> testRange;
+        testRange.push_back(CardType::A);
+        testRange.push_back(CardType::_2);
+        testRange.push_back(CardType::SUITED);
+
+        testResult &= DUT.isHigherOrEqual(testState, testRange);
+    }
+
+    //TC 3
+    {
+        GameState testState;
+        testState.hand_cards.push_back({CardType::K, CardColor::HEARTS});
+        testState.hand_cards.push_back({CardType::_2, CardColor::SPADES});
+        std::vector<CardType> testRange;
+        testRange.push_back(CardType::K);
+        testRange.push_back(CardType::_10);
+
+        testResult &= !DUT.isHigherOrEqual(testState, testRange);
+    }
+
+    if(testResult){
+        std::cout << "Self Test OK" << std::endl;
+    } else {
+        std::cout << "Self Test FAILED" << std::endl;
+    }
+
+    return testResult;
+};
+
+bool HandEvaluator::isHigherOrEqual(const GameState &currentState, std::vector<CardType> rangeVec){
+
+    //init a vector for the current hand
+    std::vector<CardType> handVec = {currentState.hand_cards[0].type, currentState.hand_cards[1].type};
+    //sorting the input vectors
+    std::sort(rangeVec.begin(), rangeVec.end());
+    std::sort(handVec.begin(), handVec.end());
+
+
+    switch (rangeVec.size()) {
+    case 1:
+        //TODO determine hand
+        return false;
+        break;
+
+    case 2:
+        //if the range to be checked is unsuited
+        return HandEvaluator::checkInRange(handVec, rangeVec);
+        break;
+
+    case 3:
+        //if the range to be checked is suited
+        if ((currentState.hand_cards[0].color == currentState.hand_cards[1].color) || (currentState.hand_cards[0].type==currentState.hand_cards[1].type)){
+            return HandEvaluator::checkInRange(handVec, rangeVec);
+        } else {
+            return false;
+        }
+
+    default:
+        //by default return false
+        return false;
+        break;
+    }
+
+}
+
+//PRIVATE interface
+bool HandEvaluator::checkInRange(std::vector<CardType> handVec, std::vector<CardType> rangeVec){
+    return ((rangeVec[1]==handVec[1]) && (handVec[0]>=rangeVec[0]));
+};
 //END of Code section for Laja
 //////////////////////////////////
 
@@ -43,131 +135,17 @@ struct GameState {
 
 class Action
 {
+public:
     ActionType  mType;
     int         mValue;
-
-public:
-    Action(ActionType type, int value = 0) : mType(type), mValue(value) {}
 };
 
 class Condition
 {
-    ConditionType       mType;
-    std::vector<int>    mArguments;
+    ConditionType mType;
 
 public:
-    template <typename T>
-    Condition(ConditionType type, std::initializer_list<T> arguments)
-        : mType(type)
-    {
-        for (auto i: arguments)
-            mArguments.push_back(i);
-
-        if (type == ConditionType::CARDS && mArguments.size() > 0 && mArguments.back() != (int)CardType::SEPARATOR)
-            mArguments.push_back((int)CardType::SEPARATOR);
-
-    }
-
-    bool evaluate(const GameState& state)
-    {
-        switch(mType)
-        {
-        case ConditionType::ACTION:
-            {
-
-            }
-            break;
-        case ConditionType::CARDS:
-            {
-
-            }
-            break;
-        case ConditionType::POSITION:
-            {
-
-            }
-            break;
-        case ConditionType::ROUND:
-            {
-
-            }
-            break;
-        }
-        return true;
-    }
-};
-
-class Trigger
-{
-    Action                  mAction;
-    std::vector<Condition>  mConditions;
-
-public:
-    Trigger(Action action, std::initializer_list<Condition> conditions = {})
-        : mAction(action), mConditions(conditions) {}
-
-    bool evaluate(const GameState& state)
-    {
-        bool result = true;
-        for (Condition i: mConditions)
-        {
-            result &= i.evaluate(state);
-            if (!result)
-                return false;
-        }
-        return true;
-    }
-
-    Action getAction() { return mAction; }
-};
-
-class Strategy
-{
-    Trigger                 mEnteringTrigger;
-    std::vector<Trigger>    mTriggers;
-
-public:
-    Strategy(Trigger enteringTrigger) : mEnteringTrigger(enteringTrigger) {}
-
-    void addTrigger(Trigger trigger) { mTriggers.push_back(trigger); }
-
-    bool evaluate(const GameState& state)
-    {
-        return mEnteringTrigger.evaluate(state);
-    }
-
-    Action execute(const GameState& state)
-    {
-        for (Trigger i: mTriggers)
-        {
-            if (i.evaluate(state))
-                return i.getAction();
-        }
-
-        return mEnteringTrigger.getAction();
-    }
-};
-
-class StrategyManager
-{
-    std::vector<Strategy> mStrategies;
-
-public:
-    void addStrategy(Strategy strategy) { mStrategies.push_back(strategy); }
-
-    Action execute(const GameState& state)
-    {
-        if (mStrategies.size() == 0)
-            return Action(ActionType::FOLD);
-
-        for (Strategy i: mStrategies)
-        {
-            if (i.evaluate(state))
-                return i.execute(state);
-        }
-
-        return Action(ActionType::FOLD);
-    }
+    Condition(ConditionType);
 };
 
 //END of Code section for Gabor
@@ -234,11 +212,14 @@ CardColor decodeCardColor(std::string s)
         return CardColor::DIAMONDS;
 }
 
-void fillState(GameState& gs, json::Value game_state)
+bool Player::fillState(GameState& gs, json::Value game_state)
 {
     gs.small_blind = game_state["small_blind"].ToInt();
 
-    json::Value me = game_state["players"].ToArray()[game_state["in_action"].ToInt()];
+    const int players_length = game_state["players"].ToArray().size();
+    const int dealer_index = game_state["dealer"].ToInt();
+    const int me_index = game_state["in_action"].ToInt();
+    json::Value me = game_state["players"].ToArray()[me_index];
     gs.stack = me["stack"];
 
     gs.has_A = me["hole_cards"].ToArray()[0]["rank"].ToString() == "A" || me["hole_cards"].ToArray()[1]["rank"].ToString() == "A";
@@ -246,6 +227,57 @@ void fillState(GameState& gs, json::Value game_state)
 
     gs.hand_cards.push_back({decodeCardType(me["hole_cards"].ToArray()[0]["rank"].ToString()), decodeCardColor(me["hole_cards"].ToArray()[0]["suit"].ToString())});
     gs.hand_cards.push_back({decodeCardType(me["hole_cards"].ToArray()[1]["rank"].ToString()), decodeCardColor(me["hole_cards"].ToArray()[1]["suit"].ToString())});
+
+    // Action
+    {
+        gs.action = ActionType::FOLD;
+        int index = dealer_index;
+        int counter = players_length;
+        int raise = 0;
+        int prev_bet = gs.small_blind * 2;
+        for (;counter--;index=(index+1)%players_length) {
+            json::Value p = game_state["players"].ToArray()[index];
+            if (p["status"] != "out") {
+                if (p["bet"].ToInt() > prev_bet) {
+                    raise++;
+                    prev_bet = p["bet"].ToInt();
+                }
+            }
+        }
+        switch (raise) {
+            case 1: gs.action = ActionType::RAISE_1;
+            case 2: gs.action = ActionType::RAISE_2;
+            case 3: gs.action = ActionType::RAISE_3;
+            case 4: gs.action = ActionType::RAISE_4;
+        }
+    }
+
+    // Position
+
+    {
+        gs.player_num = 0;
+        int index = dealer_index;
+        int counter = players_length;
+        int pos = static_cast<int>(PositionType::D);
+        for (;counter--;index=(index+1)%players_length) {
+            json::Value p = game_state["players"].ToArray()[index];
+            if (p["status"] != "out") {
+                gs.player_num++;
+                pos++;
+                if (index == me_index) {
+                    gs.position = static_cast<PositionType>(pos);
+                }
+            }
+        }
+        if (gs.player_num == 2) {
+            if (gs.position == PositionType::D) {
+                gs.position = PositionType::SB;
+            } else {
+                gs.position = PositionType::BB;
+            }
+        }
+    }
+    return true;
 }
 
 int Player::betRequest(json::Value game_state)
@@ -258,7 +290,9 @@ int Player::betRequest(json::Value game_state)
             (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type > CardType::_8) ||
             (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type > CardType::J) ||
             (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type > CardType::J) ||
-            (gs.has_pair && gs.hand_cards[0].type > CardType::_8)) ? 1000 : 0;
+            (gs.hand_cards[0].type == CardType::Q && gs.hand_cards[1].type > CardType::J && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
+            (gs.hand_cards[1].type == CardType::Q && gs.hand_cards[0].type > CardType::J && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
+            (gs.has_pair && gs.hand_cards[0].type > CardType::_6)) ? 1000 : 0;
 }
 
 void Player::showdown(json::Value game_state)

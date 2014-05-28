@@ -12,6 +12,8 @@ enum class ConditionType
     POSITION,
     ROUND,
     ACTION,
+    BB_HIGHER,
+    BB_LOWER,
 };
 
 enum class CardType
@@ -55,6 +57,7 @@ enum class CardColor
 
 enum class PositionType
 {
+    B,
     SB,
     BB,
     UTG,
@@ -86,6 +89,39 @@ enum class ActionType
 //END of Enums
 //////////////////////////////////
 
+
+struct Card {
+    CardType type;
+    CardColor color;
+};
+
+struct GameState {
+    int small_blind;
+    int stack;
+    int player_num;
+
+    bool has_A;
+    bool has_pair;
+
+    ActionType action;
+
+    PositionType position;
+    RoundType round;
+
+    std::vector<Card> hand_cards;
+    std::vector<Card> comm_cards;
+};
+
+class HandEvaluator{
+  public:
+    bool isHigherOrEqual(const GameState &currentState, std::vector<CardType> rangeVec);
+    static bool selfTest();
+  private:
+    bool checkInRange(std::vector<CardType> handVec, std::vector<CardType> rangeVec);
+
+};
+
+
 class Player
 {
     public:
@@ -94,6 +130,7 @@ class Player
         static int betRequest(json::Value game_state);
 
         static void showdown(json::Value game_state);
+        static bool fillState(GameState& gs, json::Value game_state);
 };
 
 #endif
