@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
     string action = argv[1];
     string game_state_json;
     cin >> game_state_json;
-
+    cerr << game_state_json;
     json::Value game_state = json::Deserialize(game_state_json);
 
     if(action == "bet_request")
