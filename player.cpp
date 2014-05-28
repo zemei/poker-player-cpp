@@ -6,7 +6,9 @@ const char* Player::VERSION = "Default C++ folding player";
 struct GameState {
     int small_blind;
     int stack;
+
     bool has_A;
+    bool has_pair;
 };
 
 
@@ -56,8 +58,9 @@ int Player::betRequest(json::Value game_state)
     gs.stack = me["stack"];
 
     gs.has_A = me["hand"]["hole_cards"].ToArray()[0]["rank"].ToString() == "A" || me["hand"]["hole_cards"].ToArray()[1]["rank"].ToString() == "A";
+    gs.has_pair = me["hand"]["hole_cards"].ToArray()[0]["rank"].ToString() == me["hand"]["hole_cards"].ToArray()[1]["rank"].ToString();
 
-    return gs.has_A ? 1000 : 0;
+    return (gs.has_A || gs.has_pair )? 1000 : 0;
 }
 
 void Player::showdown(json::Value game_state)
