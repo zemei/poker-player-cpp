@@ -109,6 +109,6 @@ public:
     }
 };
 
-void initStrategies(StrategyManager manager);
+void initStrategies(StrategyManager& manager);
 
 #endif // STRATEGY_H
