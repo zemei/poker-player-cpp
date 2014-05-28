@@ -241,11 +241,11 @@ void fillState(GameState& gs, json::Value game_state)
     json::Value me = game_state["players"][game_state["in_action"].ToInt()];
     gs.stack = me["stack"];
 
-    gs.has_A = me["hand"]["hole_cards"].ToArray()[0]["rank"].ToString() == "A" || me["hand"]["hole_cards"].ToArray()[1]["rank"].ToString() == "A";
-    gs.has_pair = me["hand"]["hole_cards"].ToArray()[0]["rank"].ToString() == me["hand"]["hole_cards"].ToArray()[1]["rank"].ToString();
+    gs.has_A = me["hole_cards"].ToArray()[0]["rank"].ToString() == "A" || me["hole_cards"].ToArray()[1]["rank"].ToString() == "A";
+    gs.has_pair = me["hole_cards"].ToArray()[0]["rank"].ToString() == me["hole_cards"].ToArray()[1]["rank"].ToString();
 
-    gs.hand_cards.push_back({decodeCardType(me["hand"]["hole_cards"].ToArray()[0]["rank"].ToString()), decodeCardColor(me["hand"]["hole_cards"].ToArray()[0]["suit"].ToString())});
-    gs.hand_cards.push_back({decodeCardType(me["hand"]["hole_cards"].ToArray()[1]["rank"].ToString()), decodeCardColor(me["hand"]["hole_cards"].ToArray()[1]["suit"].ToString())});
+    gs.hand_cards.push_back({decodeCardType(me["hole_cards"].ToArray()[0]["rank"].ToString()), decodeCardColor(me["hole_cards"].ToArray()[0]["suit"].ToString())});
+    gs.hand_cards.push_back({decodeCardType(me["hole_cards"].ToArray()[1]["rank"].ToString()), decodeCardColor(me["hole_cards"].ToArray()[1]["suit"].ToString())});
 }
 
 int Player::betRequest(json::Value game_state)
