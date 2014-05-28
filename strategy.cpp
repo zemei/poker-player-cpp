@@ -9,8 +9,11 @@ bool Condition::evaluate(const GameState& state)
             if (mArguments.size() == 0)
                 return false;
 
-            if ((ActionType)mArguments[0] == state.action)
-                return true;
+            for (int i: mArguments)
+            {
+                if ((ActionType)i == state.action)
+                    return true;
+            }
 
             return false;
         }
@@ -204,6 +207,42 @@ void initStrategies(StrategyManager& manager)
     });
 
 //SECOND LINE
+    strategy_1.addTrigger({
+        {ActionType::ALL_IN}, {
+            {ConditionType::LESS_PLAYER, {4}},
+            {ConditionType::ACTION, {ActionType::FOLD, ActionType::CHECK}},
+            {ConditionType::CARDS, {
+                CardType::_2, CardType::_2, CardType::SEPARATOR,
+                CardType::A, CardType::_2, CardType::SUITED, CardType::SEPARATOR,
+                CardType::K, CardType::_2, CardType::SUITED, CardType::SEPARATOR,
+                CardType::Q, CardType::_5, CardType::SUITED, CardType::SEPARATOR,
+                CardType::J, CardType::_8, CardType::SUITED, CardType::SEPARATOR,
+                CardType::_10, CardType::_9, CardType::SUITED, CardType::SEPARATOR,
+                CardType::A, CardType::_2, CardType::SEPARATOR,
+                CardType::K, CardType::_5, CardType::SEPARATOR,
+                CardType::Q, CardType::_9, CardType::SEPARATOR,
+                CardType::J, CardType::_10, CardType::SEPARATOR
+            }}
+        }
+    });
+
+//THIRD LINE
+    strategy_1.addTrigger({
+        {ActionType::ALL_IN}, {
+            {ConditionType::LESS_PLAYER, {4}},
+            {ConditionType::ACTION, {ActionType::RAISE_1, ActionType::RAISE_2, ActionType::RAISE_3, ActionType::RAISE_4}},
+            {ConditionType::CARDS, {
+                CardType::_2, CardType::_2, CardType::SEPARATOR,
+                CardType::A, CardType::_2, CardType::SUITED, CardType::SEPARATOR,
+                CardType::K, CardType::_8, CardType::SUITED, CardType::SEPARATOR,
+                CardType::Q, CardType::_9, CardType::SUITED, CardType::SEPARATOR,
+                CardType::J, CardType::_10, CardType::SUITED, CardType::SEPARATOR,
+                CardType::A, CardType::_6, CardType::SEPARATOR,
+                CardType::K, CardType::_9, CardType::SEPARATOR,
+                CardType::Q, CardType::J, CardType::SEPARATOR
+            }}
+        }
+    });
 
 //LAST LINE
     strategy_1.addTrigger({
@@ -220,6 +259,7 @@ void initStrategies(StrategyManager& manager)
 bool strategyTest() {
 	std::cout << "Running StrategyManager Test" << std::endl;
 
+	int testCase = 0;
 	bool testResult = true;
 
 	StrategyManager strategyManager;
@@ -229,24 +269,166 @@ bool strategyTest() {
 	//TC 0
 	{
 		GameState testState;
+		testState.hand_cards.push_back( { CardType::_9, CardColor::HEARTS } );
+		testState.hand_cards.push_back( { CardType::_9, CardColor::SPADES } );
+		testState.comm_cards.push_back( { CardType::_3, CardColor::CLUBS } );
+		testState.comm_cards.push_back( { CardType::_5, CardColor::HEARTS } );
+		testState.comm_cards.push_back( { CardType::_7, CardColor::CLUBS } );
+		testState.position = PositionType::UTG;
+		testState.small_blind = 10;
+		testState.stack = testState.small_blind * 15 * 2 - 1;
+
+		Action action = strategyManager.execute( testState );
+
+		if( action.mType != ActionType::ALL_IN ) {
+			std::cout << "Strategy Test "  << testCase++ << " failed " << std::endl;
+			testResult = false;
+		}
+	}
+
+	//TC 1
+	{
+		GameState testState;
+		testState.hand_cards.push_back( { CardType::_7, CardColor::HEARTS } );
+		testState.hand_cards.push_back( { CardType::_7, CardColor::SPADES } );
+		testState.comm_cards.push_back( { CardType::_3, CardColor::CLUBS } );
+		testState.comm_cards.push_back( { CardType::_5, CardColor::HEARTS } );
+		testState.comm_cards.push_back( { CardType::_2, CardColor::CLUBS } );
+		testState.position = PositionType::UTG;
+		testState.small_blind = 10;
+		testState.stack = testState.small_blind * 15 * 2 - 1;
+
+		Action action = strategyManager.execute( testState );
+
+		if( action.mType == ActionType::ALL_IN ) {
+			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			testResult = false;
+		}
+	}
+
+	//TC 2
+	{
+		GameState testState;
+		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
+		testState.hand_cards.push_back( { CardType::A, CardColor::SPADES } );
+		testState.comm_cards.push_back( { CardType::_3, CardColor::CLUBS } );
+		testState.comm_cards.push_back( { CardType::_5, CardColor::HEARTS } );
+		testState.comm_cards.push_back( { CardType::_9, CardColor::CLUBS } );
+		testState.position = PositionType::UTG;
+		testState.small_blind = 10;
+		testState.stack = testState.small_blind * 15 * 2 + 1;
+
+		Action action = strategyManager.execute( testState );
+
+		if( action.mType == ActionType::ALL_IN ) {
+			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			testResult = false;
+		}
+	}
+
+	//TC 3
+	{
+		GameState testState;
 		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
 		testState.hand_cards.push_back( { CardType::Q, CardColor::SPADES } );
-		testState.comm_cards.push_back( { CardType::_3, CardColor:: CLUBS } );
+		testState.comm_cards.push_back( { CardType::_3, CardColor::CLUBS } );
 		testState.comm_cards.push_back( { CardType::_5, CardColor::HEARTS } );
 		testState.comm_cards.push_back( { CardType::_9, CardColor::CLUBS } );
 		testState.position = PositionType::UTG;
 		testState.small_blind = 10;
 		testState.stack = testState.small_blind * 15 * 2 - 1;
-		
+
 		Action action = strategyManager.execute( testState );
 
 		if( action.mType != ActionType::ALL_IN ) {
-			std::cout << "Strategy Test 0 failed " << std::endl;
+			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
 			testResult = false;
 		}
 	}
 
-	
+
+	//TC 4
+	{
+		GameState testState;
+		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
+		testState.hand_cards.push_back( { CardType::_2, CardColor::SPADES } );
+		testState.comm_cards.push_back( { CardType::_3, CardColor::CLUBS } );
+		testState.comm_cards.push_back( { CardType::_5, CardColor::HEARTS } );
+		testState.comm_cards.push_back( { CardType::_9, CardColor::CLUBS } );
+		testState.position = PositionType::UTG;
+		testState.small_blind = 10;
+		testState.stack = testState.small_blind * 15 * 2 - 1;
+		testState.player_num = 3;
+
+		Action action = strategyManager.execute( testState );
+
+		if( action.mType != ActionType::ALL_IN ) {
+			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			testResult = false;
+		}
+	}
+
+	//TC 5
+	{
+		GameState testState;
+		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
+		testState.hand_cards.push_back( { CardType::Q, CardColor::HEARTS } );
+		testState.comm_cards.push_back( { CardType::_3, CardColor::CLUBS } );
+		testState.comm_cards.push_back( { CardType::_5, CardColor::HEARTS } );
+		testState.comm_cards.push_back( { CardType::_9, CardColor::CLUBS } );
+		testState.position = PositionType::UTG;
+		testState.small_blind = 10;
+		testState.stack = testState.small_blind * 15 * 2 - 1;
+
+		Action action = strategyManager.execute( testState );
+
+		if( action.mType != ActionType::ALL_IN ) {
+			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			testResult = false;
+		}
+	}
+
+	//TC 6
+	{
+		GameState testState;
+		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
+		testState.hand_cards.push_back( { CardType::_2, CardColor::SPADES } );
+		testState.comm_cards.push_back( { CardType::_3, CardColor::CLUBS } );
+		testState.comm_cards.push_back( { CardType::_5, CardColor::HEARTS } );
+		testState.comm_cards.push_back( { CardType::_9, CardColor::CLUBS } );
+		testState.position = PositionType::UTG;
+		testState.small_blind = 10;
+		testState.stack = testState.small_blind * 15 * 2 - 1;
+		testState.player_num = 2;
+
+		Action action = strategyManager.execute( testState );
+
+		if( action.mType != ActionType::NO_ACTION ) {
+			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			testResult = false;
+		}
+	}
+
+	//TC 7
+	{
+		GameState testState;
+		testState.hand_cards.push_back( { CardType::_9, CardColor::SPADES } );
+		testState.hand_cards.push_back( { CardType::_3, CardColor::SPADES } );
+		testState.comm_cards.push_back( { CardType::_2, CardColor::CLUBS } );
+		testState.comm_cards.push_back( { CardType::J, CardColor::HEARTS } );
+		testState.comm_cards.push_back( { CardType::_7, CardColor::CLUBS } );
+		testState.position = PositionType::UTG;
+		testState.small_blind = 10;
+		testState.stack = testState.small_blind * 15 * 2 - 1;
+
+		Action action = strategyManager.execute( testState );
+
+		if( action.mType != ActionType::NO_ACTION ) {
+			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			testResult = false;
+		}
+	}
+
 	if( testResult ) {
 		std::cout << "StrategyManager Test OK" << std::endl;
 	} else {

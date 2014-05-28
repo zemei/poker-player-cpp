@@ -88,7 +88,7 @@ bool HandEvaluator::selfTest(){
 		}
     }
 
-    //TC 3
+    //TC 4
     {
         GameState testState;
         testState.hand_cards.push_back({CardType::K, CardColor::HEARTS});
@@ -98,6 +98,21 @@ bool HandEvaluator::selfTest(){
         testRange.push_back(CardType::_10);
 
         if( !DUT.isHigherOrEqual( testState, testRange ) ) {
+            std::cout << "Range Test 4 failed " << std::endl;
+            testResult = false;
+        }
+    }
+
+    //TC 5
+    {
+        GameState testState;
+        testState.hand_cards.push_back({CardType::A, CardColor::HEARTS});
+        testState.hand_cards.push_back({CardType::Q, CardColor::SPADES});
+        std::vector<CardType> testRange;
+        testRange.push_back(CardType::_8);
+        testRange.push_back(CardType::_8);
+
+        if( DUT.isHigherOrEqual( testState, testRange ) ) {
             std::cout << "Range Test 4 failed " << std::endl;
             testResult = false;
         }
@@ -151,7 +166,12 @@ bool HandEvaluator::isHigherOrEqual(const GameState &currentState, std::vector<C
 //PRIVATE interface
 bool HandEvaluator::checkInRange(std::vector<CardType> handVec, std::vector<CardType> rangeVec){
     if(rangeVec[0]==rangeVec[1]){
-        return ((handVec[0]>=rangeVec[0]));
+        if(handVec[0]==handVec[1]){
+            return ((handVec[0]>=rangeVec[0]));
+        } else {
+            return false;
+        }
+
     } else {
         return ((rangeVec[1]==handVec[1]) && (handVec[0]>=rangeVec[0]));
     }
@@ -333,7 +353,7 @@ int Player::betRequest(json::Value game_state)
             )
         )
     {
-        return 1000;
+        return gs.stack;
     }
     if (gs.player_num == 3 && gs.action >= ActionType::RAISE_1 &&
             (
@@ -345,7 +365,7 @@ int Player::betRequest(json::Value game_state)
             )
         )
     {
-        return 1000;
+        return gs.stack;
     }
 
     if (gs.player_num < 3 && gs.action >= ActionType::RAISE_1 &&
@@ -364,7 +384,7 @@ int Player::betRequest(json::Value game_state)
             )
         )
     {
-        return 1000;
+        return gs.stack;
     }
 
     if (gs.player_num < 3 &&
@@ -389,7 +409,7 @@ int Player::betRequest(json::Value game_state)
             )
         )
     {
-        return 1000;
+        return gs.stack;
     }
 
     return ((gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type >= CardType::J) ||
@@ -421,7 +441,7 @@ int Player::betRequest(json::Value game_state)
                         (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type >= CardType::_9) ||
                         (gs.has_pair && gs.hand_cards[0].type >= CardType::_2)
                     )
-                )? 1000 : 0
+                )? gs.stack : 0
             );
 }
 
