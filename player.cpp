@@ -234,7 +234,7 @@ CardColor decodeCardColor(std::string s)
         return CardColor::DIAMONDS;
 }
 
-void fillState(GameState& gs, json::Object game_state)
+void fillState(GameState& gs, json::Value game_state)
 {
     gs.small_blind = game_state["small_blind"].ToInt();
 
@@ -251,7 +251,7 @@ void fillState(GameState& gs, json::Object game_state)
 int Player::betRequest(json::Value game_state)
 {
     GameState gs;
-    fillState(gs, game_state.ToObject());
+    fillState(gs, game_state);
 
     //return (gs.has_A || gs.has_pair )? 1000 : 0;
     return ((gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type > CardType::_8) ||
