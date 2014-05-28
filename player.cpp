@@ -9,7 +9,7 @@
 
 //Continous delivery poker
 
-const char* Player::VERSION = "Default C++ folding player";
+const char* Player::VERSION = "Rounders poker strategy";
 
 //////////////////////////////////
 //START of Code section for Laja
@@ -332,17 +332,19 @@ int Player::betRequest(json::Value game_state)
     GameState gs;
     fillState(gs, game_state);
 
-    /*StrategyManager manager;
+    StrategyManager manager;
     initStrategies(manager);
     Action action = manager.execute(gs);
     switch (action.mType) {
         case ActionType::ALL_IN:
-            return 1000;
+            return gs.stack;
         case ActionType::CALL:
             return gs.call_value;
         case ActionType::FOLD:
             return 0;
-    }*/
+        default:
+            break;
+    }
 
     //return (gs.has_A || gs.has_pair )? 1000 : 0;
     if (gs.player_num == 5 && gs.action >= ActionType::RAISE_1 &&

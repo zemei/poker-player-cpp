@@ -12,6 +12,7 @@ enum class ConditionType
     POSITION,
     ROUND,
     ACTION,
+    NOT_ACTION,
     ACTION_ON_POS,
     BB_HIGHER,
     BB_LOWER,

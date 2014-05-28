@@ -18,6 +18,20 @@ bool Condition::evaluate(const GameState& state)
             return false;
         }
         break;
+    case ConditionType::NOT_ACTION:
+        {
+            if (mArguments.size() == 0)
+                return false;
+
+            for (int i: mArguments)
+            {
+                if ((ActionType)i == state.action)
+                    return false;
+            }
+
+            return true;
+        }
+        break;
     case ConditionType::CARDS:
         {
             if (mArguments.size() == 0)
@@ -155,7 +169,8 @@ void initStrategies(StrategyManager& manager)
 //FIRST LINE
 	strategy_1.addTrigger({
 		{ActionType::ALL_IN}, {
-			{ConditionType::POSITION, {PositionType::UTG}},
+            {ConditionType::POSITION, {PositionType::UTG}},
+            {ConditionType::ACTION, {ActionType::FOLD, ActionType::CHECK}},
 			{ConditionType::CARDS, {
 				CardType::_8, CardType::_8, CardType::SEPARATOR,
 				CardType::A, CardType::_10, CardType::SUITED, CardType::SEPARATOR,
@@ -166,6 +181,7 @@ void initStrategies(StrategyManager& manager)
 	strategy_1.addTrigger({
 		{ActionType::ALL_IN}, {
 			{ConditionType::POSITION, {PositionType::CO}},
+            {ConditionType::ACTION, {ActionType::FOLD, ActionType::CHECK}},
 			{ConditionType::CARDS, {
 				CardType::_6, CardType::_6, CardType::SEPARATOR,
 				CardType::A, CardType::_5, CardType::SUITED, CardType::SEPARATOR,
@@ -178,6 +194,7 @@ void initStrategies(StrategyManager& manager)
 	strategy_1.addTrigger({
 		{ActionType::ALL_IN}, {
 			{ConditionType::POSITION, {PositionType::D}},
+            {ConditionType::ACTION, {ActionType::FOLD, ActionType::CHECK}},
 			{ConditionType::CARDS, {
 				CardType::_2, CardType::_2, CardType::SEPARATOR,
 				CardType::A, CardType::_2, CardType::SUITED, CardType::SEPARATOR,
@@ -191,6 +208,7 @@ void initStrategies(StrategyManager& manager)
     strategy_1.addTrigger({
         {ActionType::ALL_IN}, {
             {ConditionType::POSITION, {PositionType::B}},
+            {ConditionType::ACTION, {ActionType::FOLD, ActionType::CHECK}},
             {ConditionType::CARDS, {
                 CardType::_2, CardType::_2, CardType::SEPARATOR,
                 CardType::A, CardType::_2, CardType::SUITED, CardType::SEPARATOR,
@@ -248,7 +266,7 @@ void initStrategies(StrategyManager& manager)
     strategy_1.addTrigger({
         {ActionType::ALL_IN}, {
             {ConditionType::CARDS, {
-                CardType::K, CardType::K, CardType::SEPARATOR,
+                CardType::Q, CardType::Q, CardType::SEPARATOR,
             }}
         }
     });
