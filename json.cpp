@@ -127,6 +127,7 @@ Value& Value::operator [](const std::string& key)
 
 Value& Value::operator [](const char* key)
 {
+    std::cerr << mValueType << std::endl;
     std::cerr << key << std::endl;
     assert(mValueType == ObjectVal);
 	return mObjectVal[key];
