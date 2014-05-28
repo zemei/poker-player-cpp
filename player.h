@@ -105,6 +105,7 @@ struct GameState {
     int stack;
     int player_num;
     int call_value;
+    int half_pot;
 
     bool has_A;
     bool has_pair;

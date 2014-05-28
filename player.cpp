@@ -131,15 +131,63 @@ bool HandEvaluator::isHigherOrEqual(const GameState &currentState, std::vector<C
 
     //init a vector for the current hand
     std::vector<CardType> handVec = {currentState.hand_cards[0].type, currentState.hand_cards[1].type};
+
+    std::vector<CardType> commCardVec;
+    for(const auto& c : currentState.comm_cards)
+        commCardVec.push_back(c.type);
     //sorting the input vectors
     std::sort(rangeVec.begin(), rangeVec.end());
     std::sort(handVec.begin(), handVec.end());
+    std::sort(commCardVec.begin(), commCardVec.end());
 
 
     switch (rangeVec.size()) {
     case 1:
-        //TODO determine hand
-        return false;
+        //Determine hand
+        switch (rangeVec[0]) {
+            case CardType::FLUSH :
+                {
+                    std::vector<Card> tmpVec;
+                    tmpVec.insert(tmpVec.end(), currentState.hand_cards.begin(), currentState.hand_cards.end());
+                    tmpVec.insert(tmpVec.end(), currentState.comm_cards.begin(), currentState.comm_cards.end());
+                    return std::all_of(tmpVec.begin(), tmpVec.end(), [&tmpVec](const Card & c){return c.color==tmpVec.front().color;});
+                }
+
+            case CardType::TOP_PAIR:
+                {
+                    if(commCardVec.size()<3){
+                        return false;
+                    } else{
+                        return (commCardVec.back()==handVec[0] || commCardVec.back()==handVec[1]) || ((handVec[0]==handVec[1]) && (handVec[0]>commCardVec.back()));
+                    }
+
+                }
+
+            case CardType::MID_PAIR:
+                {
+                    if(commCardVec.size()<3){
+                        return false;
+                    } else{
+                        CardType topCard = commCardVec.back();
+                        commCardVec.pop_back();
+                        return (commCardVec.back()==handVec[0] || commCardVec.back()==handVec[1]) || ((handVec[0]==handVec[1]) && (handVec[0]>commCardVec.front()) && (handVec[0]<topCard));
+                    }
+
+                }
+
+            case CardType::LOW_PAIR:
+                {
+                    if(commCardVec.size()<3){
+                        return false;
+                    } else{
+                        return (commCardVec.front()==handVec[0] || commCardVec.front()==handVec[1]) || ((handVec[0]==handVec[1]) && (handVec[0]< commCardVec.front()));
+                    }
+
+                }
+
+            default:
+                return false;
+        }
         break;
 
     case 2:
@@ -264,6 +312,7 @@ bool Player::fillState(GameState& gs, json::Value game_state)
     gs.stack = me["stack"];
 
     gs.call_value -= me["bet"].ToInt();
+    gs.half_pot = std::max(game_state["pot"], game_state["minimum_raise"]);
 
     gs.has_A = me["hole_cards"].ToArray()[0]["rank"].ToString() == "A" || me["hole_cards"].ToArray()[1]["rank"].ToString() == "A";
     gs.has_pair = me["hole_cards"].ToArray()[0]["rank"].ToString() == me["hole_cards"].ToArray()[1]["rank"].ToString();
@@ -274,6 +323,13 @@ bool Player::fillState(GameState& gs, json::Value game_state)
     const int comm_card_num = game_state["community_cards"].size();
     for (int i = 0; i < comm_card_num; ++i)
         gs.comm_cards.push_back({decodeCardType(game_state["community_cards"].ToArray()[i]["rank"].ToString()), decodeCardColor(game_state["community_cards"].ToArray()[1]["suit"].ToString())});
+
+    gs.round = RoundType::PREFLOP;
+    switch (gs.comm_cards.size()) {
+        case 3: gs.round = RoundType::FLOP; break;
+        case 4: gs.round = RoundType::TURN; break;
+        case 5: gs.round = RoundType::RIVER; break;
+    }
 
     // Action
     {
@@ -342,6 +398,8 @@ int Player::betRequest(json::Value game_state)
             return gs.call_value;
         case ActionType::FOLD:
             return 0;
+        case ActionType::BET_HALF_POT:
+            return gs.half_pot;
         default:
             break;
     }

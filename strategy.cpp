@@ -162,7 +162,8 @@ void initStrategies(StrategyManager& manager)
 //STRATEGY 1
     Strategy strategy_1({
         {ActionType::NO_ACTION}, {
-            {ConditionType::BB_HIGHER, {15}}
+            {ConditionType::BB_HIGHER, {15}},
+            {ConditionType::ROUND, {RoundType::PREFLOP}}
         }
     });
 
@@ -271,13 +272,125 @@ void initStrategies(StrategyManager& manager)
         }
     });
 
+//////////////////////////////////
+//STRATEGY 2
+    Strategy strategy_2({
+        {ActionType::NO_ACTION}, {
+            {ConditionType::BB_LOWER, {15}},
+            {ConditionType::ROUND, {RoundType::PREFLOP}}
+        }
+    });
+    strategy_2.addTrigger({
+        {ActionType::BET_HALF_POT}, {
+            {ConditionType::POSITION, {PositionType::UTG}},
+            {ConditionType::ACTION, {ActionType::FOLD, ActionType::CHECK}},
+            {ConditionType::CARDS, {
+                CardType::_8, CardType::_8, CardType::SEPARATOR,
+                CardType::A, CardType::_10, CardType::SUITED, CardType::SEPARATOR,
+                CardType::A, CardType::J, CardType::SEPARATOR
+            }}
+        }
+    });
+    strategy_2.addTrigger({
+        {ActionType::BET_HALF_POT}, {
+            {ConditionType::POSITION, {PositionType::CO}},
+            {ConditionType::ACTION, {ActionType::FOLD, ActionType::CHECK}},
+            {ConditionType::CARDS, {
+                CardType::_6, CardType::_6, CardType::SEPARATOR,
+                CardType::A, CardType::_5, CardType::SUITED, CardType::SEPARATOR,
+                CardType::K, CardType::J, CardType::SUITED, CardType::SEPARATOR,
+                CardType::A, CardType::_8, CardType::SEPARATOR,
+                CardType::K, CardType::Q, CardType::SEPARATOR
+            }}
+        }
+    });
+    strategy_2.addTrigger({
+        {ActionType::BET_HALF_POT}, {
+            {ConditionType::POSITION, {PositionType::D}},
+            {ConditionType::ACTION, {ActionType::FOLD, ActionType::CHECK}},
+            {ConditionType::CARDS, {
+                CardType::_2, CardType::_2, CardType::SEPARATOR,
+                CardType::A, CardType::_2, CardType::SUITED, CardType::SEPARATOR,
+                CardType::K, CardType::_9, CardType::SUITED, CardType::SEPARATOR,
+                CardType::Q, CardType::J, CardType::SUITED, CardType::SEPARATOR,
+                CardType::A, CardType::_2, CardType::SEPARATOR,
+                CardType::K, CardType::_10, CardType::SEPARATOR
+            }}
+        }
+    });
+    strategy_2.addTrigger({
+        {ActionType::BET_HALF_POT}, {
+            {ConditionType::POSITION, {PositionType::B}},
+            {ConditionType::ACTION, {ActionType::FOLD, ActionType::CHECK}},
+            {ConditionType::CARDS, {
+                CardType::_2, CardType::_2, CardType::SEPARATOR,
+                CardType::A, CardType::_2, CardType::SUITED, CardType::SEPARATOR,
+                CardType::K, CardType::_2, CardType::SUITED, CardType::SEPARATOR,
+                CardType::Q, CardType::_5, CardType::SUITED, CardType::SEPARATOR,
+                CardType::J, CardType::_8, CardType::SUITED, CardType::SEPARATOR,
+                CardType::_10, CardType::_9, CardType::SUITED, CardType::SEPARATOR,
+                CardType::A, CardType::_2, CardType::SEPARATOR,
+                CardType::K, CardType::_5, CardType::SEPARATOR,
+                CardType::Q, CardType::_9, CardType::SEPARATOR,
+                CardType::J, CardType::_10, CardType::SEPARATOR
+            }}
+        }
+    });
+
+
+//////////////////////////////////
+//STRATEGY 3
+    Strategy strategy_3({
+        {ActionType::NO_ACTION}, {
+            {ConditionType::BB_LOWER, {15}},
+            {ConditionType::ROUND, {RoundType::FLOP}}
+        }
+    });
+
+//FIRST LINE
+    strategy_3.addTrigger({
+        {ActionType::ALL_IN}, {
+            {ConditionType::CARDS, {CardType::DRILL, CardType::SEPARATOR}}
+        }
+    });
+    strategy_3.addTrigger({
+        {ActionType::ALL_IN}, {
+            {ConditionType::LESS_PLAYER, {4}},
+            {ConditionType::CARDS, {CardType::TWO_PAIRS, CardType::SEPARATOR}}
+        }
+    });
+    strategy_3.addTrigger({
+        {ActionType::ALL_IN}, {
+            {ConditionType::LESS_PLAYER, {3}},
+            {ConditionType::CARDS, {CardType::TOP_PAIR, CardType::SEPARATOR}}
+        }
+    });
+    strategy_3.addTrigger({
+        {ActionType::ALL_IN}, {
+            {ConditionType::LESS_PLAYER, {2}},
+            {ConditionType::CARDS, {CardType::MID_PAIR, CardType::SEPARATOR}}
+        }
+    });
+    strategy_3.addTrigger({
+        {ActionType::FOLD}, {
+            {ConditionType::CARDS, {CardType::LOW_PAIR, CardType::SEPARATOR}}
+        }
+    });
+    strategy_3.addTrigger({
+        {ActionType::FOLD}, {
+            {ConditionType::CARDS, {CardType::HIGH_CARD, CardType::SEPARATOR}}
+        }
+    });
+
     manager.addStrategy(strategy_1);
+    manager.addStrategy(strategy_2);
+    manager.addStrategy(strategy_3);
 }
 
 bool strategyTest() {
 	std::cout << "Running StrategyManager Test" << std::endl;
 
-	int testCase = 0;
+	int testCase = -1;
 	bool testResult = true;
 
 	StrategyManager strategyManager;
@@ -286,6 +399,7 @@ bool strategyTest() {
 	//init test input
 	//TC 0
 	{
+		testCase++;
 		GameState testState;
 		testState.hand_cards.push_back( { CardType::_9, CardColor::HEARTS } );
 		testState.hand_cards.push_back( { CardType::_9, CardColor::SPADES } );
@@ -299,13 +413,14 @@ bool strategyTest() {
 		Action action = strategyManager.execute( testState );
 
 		if( action.mType != ActionType::ALL_IN ) {
-			std::cout << "Strategy Test "  << testCase++ << " failed " << std::endl;
+			std::cout << "Strategy Test "  << testCase << " failed " << std::endl;
 			testResult = false;
 		}
 	}
 
 	//TC 1
 	{
+		testCase++;
 		GameState testState;
 		testState.hand_cards.push_back( { CardType::_7, CardColor::HEARTS } );
 		testState.hand_cards.push_back( { CardType::_7, CardColor::SPADES } );
@@ -319,13 +434,14 @@ bool strategyTest() {
 		Action action = strategyManager.execute( testState );
 
 		if( action.mType == ActionType::ALL_IN ) {
-			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			std::cout << "Strategy Test " << testCase << " failed " << std::endl;
 			testResult = false;
 		}
 	}
 
 	//TC 2
 	{
+		testCase++;
 		GameState testState;
 		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
 		testState.hand_cards.push_back( { CardType::A, CardColor::SPADES } );
@@ -339,13 +455,14 @@ bool strategyTest() {
 		Action action = strategyManager.execute( testState );
 
 		if( action.mType == ActionType::ALL_IN ) {
-			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			std::cout << "Strategy Test " << testCase << " failed " << std::endl;
 			testResult = false;
 		}
 	}
 
 	//TC 3
 	{
+		testCase++;
 		GameState testState;
 		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
 		testState.hand_cards.push_back( { CardType::Q, CardColor::SPADES } );
@@ -359,7 +476,7 @@ bool strategyTest() {
 		Action action = strategyManager.execute( testState );
 
 		if( action.mType != ActionType::ALL_IN ) {
-			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			std::cout << "Strategy Test " << testCase << " failed " << std::endl;
 			testResult = false;
 		}
 	}
@@ -367,6 +484,7 @@ bool strategyTest() {
 
 	//TC 4
 	{
+		testCase++;
 		GameState testState;
 		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
 		testState.hand_cards.push_back( { CardType::_2, CardColor::SPADES } );
@@ -381,13 +499,14 @@ bool strategyTest() {
 		Action action = strategyManager.execute( testState );
 
 		if( action.mType != ActionType::ALL_IN ) {
-			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			std::cout << "Strategy Test " << testCase << " failed " << std::endl;
 			testResult = false;
 		}
 	}
 
 	//TC 5
 	{
+		testCase++;
 		GameState testState;
 		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
 		testState.hand_cards.push_back( { CardType::Q, CardColor::HEARTS } );
@@ -401,13 +520,14 @@ bool strategyTest() {
 		Action action = strategyManager.execute( testState );
 
 		if( action.mType != ActionType::ALL_IN ) {
-			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			std::cout << "Strategy Test " << testCase << " failed " << std::endl;
 			testResult = false;
 		}
 	}
 
 	//TC 6
 	{
+		testCase++;
 		GameState testState;
 		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
 		testState.hand_cards.push_back( { CardType::_2, CardColor::SPADES } );
@@ -422,13 +542,14 @@ bool strategyTest() {
 		Action action = strategyManager.execute( testState );
 
 		if( action.mType != ActionType::NO_ACTION ) {
-			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			std::cout << "Strategy Test " << testCase << " failed " << std::endl;
 			testResult = false;
 		}
 	}
 
 	//TC 7
 	{
+		testCase++;
 		GameState testState;
 		testState.hand_cards.push_back( { CardType::_9, CardColor::SPADES } );
 		testState.hand_cards.push_back( { CardType::_3, CardColor::SPADES } );
@@ -442,7 +563,7 @@ bool strategyTest() {
 		Action action = strategyManager.execute( testState );
 
 		if( action.mType != ActionType::NO_ACTION ) {
-			std::cout << "Strategy Test " << testCase++ << " failed " << std::endl;
+			std::cout << "Strategy Test " << testCase << " failed " << std::endl;
 			testResult = false;
 		}
 	}
