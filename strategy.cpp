@@ -14,7 +14,7 @@ bool Condition::evaluate(const GameState& state)
             if (mArguments.size() == 0)
                 return false;
 
-            bool isSuited = false;
+            //bool isSuited = false;
             for (int i: mArguments)
             {
                 std::vector<CardType> cardSet;
@@ -22,7 +22,7 @@ bool Condition::evaluate(const GameState& state)
                 {
                     if (cardSet.size() == 0)
                     {
-                        isSuited = false;
+                        //isSuited = false;
                         continue;
                     }
 
@@ -66,6 +66,18 @@ bool Condition::evaluate(const GameState& state)
             return false;
         }
         break;
+    case ConditionType::BB_HIGHER:
+        {
+            if (state.small_blind == 0 || mArguments.size() == 0)
+                return false;
+
+            int ratio = state.stack / state.small_blind / 2;
+            if ((int)mArguments[0] > ratio)
+                return true;
+
+            return false;
+        }
+        break;
     }
 
     return true;
@@ -73,17 +85,22 @@ bool Condition::evaluate(const GameState& state)
 
 void initStrategies(StrategyManager& manager)
 {
+    /*strategy_1.addTrigger({
+        {}, {
+            {},
+            {}
+        }
+    });*/
+
+//////////////////////////////////
+//STRATEGY 1
     Strategy strategy_1({
-        {ActionType::FOLD}, {
-            {ConditionType::BB_LOWER, {100}}
+        {ActionType::NO_ACTION}, {
+            {ConditionType::BB_HIGHER, {15}}
         }
     });
-    /*strategy_1.addTrigger({
-		{}, {
-			{},
-			{}
-		}
-	});*/
+
+//FIRST LINE
 	strategy_1.addTrigger({
 		{ActionType::ALL_IN}, {
 			{ConditionType::POSITION, {PositionType::UTG}},
@@ -136,5 +153,17 @@ void initStrategies(StrategyManager& manager)
             }}
         }
     });
+
+//SECOND LINE
+
+//LAST LINE
+    strategy_1.addTrigger({
+        {ActionType::ALL_IN}, {
+            {ConditionType::CARDS, {
+                CardType::K, CardType::K, CardType::SEPARATOR,
+            }}
+        }
+    });
+
     manager.addStrategy(strategy_1);
 }

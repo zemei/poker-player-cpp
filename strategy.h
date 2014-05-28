@@ -97,7 +97,7 @@ public:
     Action execute(const GameState& state)
     {
         if (mStrategies.size() == 0)
-            return Action(ActionType::FOLD);
+            return Action(ActionType::NO_ACTION);
 
         for (Strategy i: mStrategies)
         {
@@ -105,7 +105,7 @@ public:
                 return i.execute(state);
         }
 
-        return Action(ActionType::FOLD);
+        return Action(ActionType::NO_ACTION);
     }
 };
 

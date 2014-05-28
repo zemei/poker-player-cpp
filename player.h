@@ -15,6 +15,7 @@ enum class ConditionType
     ACTION_ON_POS,
     BB_HIGHER,
     BB_LOWER,
+    NR_OF_PLAYERS,
 };
 
 enum class CardType
@@ -76,6 +77,7 @@ enum class RoundType
 
 enum class ActionType
 {
+    NO_ACTION,
     FOLD,
     CHECK,
     CALL,

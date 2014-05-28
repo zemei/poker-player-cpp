@@ -1,9 +1,11 @@
 #include "player.h"
+#include "strategy.h"
 
 #include <initializer_list>
 #include <vector>
 #include <algorithm>
 #include <iostream>
+
 
 //Continous delivery poker
 
@@ -33,7 +35,10 @@ bool HandEvaluator::selfTest(){
         testRange.push_back(CardType::_2);
         testRange.push_back(CardType::SUITED);
 
-        testResult &= DUT.isHigherOrEqual(testState, testRange);
+		if( !DUT.isHigherOrEqual( testState, testRange ) ) {
+			std::cout << "Range Test 0 failed " << std::endl;
+			testResult = false;
+		}
     }
     //TC 1
     {
@@ -45,7 +50,10 @@ bool HandEvaluator::selfTest(){
         testRange.push_back(CardType::_2);
         testRange.push_back(CardType::SUITED);
 
-        testResult &= !DUT.isHigherOrEqual(testState, testRange);
+		if( !DUT.isHigherOrEqual( testState, testRange ) ) {
+			std::cout << "Range Test 1 failed " << std::endl;
+			testResult = false;
+		}
     }
 
     //TC 2
@@ -58,7 +66,10 @@ bool HandEvaluator::selfTest(){
         testRange.push_back(CardType::_2);
         testRange.push_back(CardType::SUITED);
 
-        testResult &= DUT.isHigherOrEqual(testState, testRange);
+		if( !DUT.isHigherOrEqual( testState, testRange ) ) {
+			std::cout << "Range Test 2 failed " << std::endl;
+			testResult = false;
+		}
     }
 
     //TC 3
@@ -70,8 +81,38 @@ bool HandEvaluator::selfTest(){
         testRange.push_back(CardType::K);
         testRange.push_back(CardType::_10);
 
-        testResult &= !DUT.isHigherOrEqual(testState, testRange);
+		if( !DUT.isHigherOrEqual( testState, testRange ) ) {
+			std::cout << "Range Test 3 failed " << std::endl;
+			testResult = false;
+		}
     }
+
+	StrategyManager strategyManager;
+	initStrategies( strategyManager );
+
+	//test 1
+	{
+		GameState testState;
+		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
+		testState.hand_cards.push_back( { CardType::A, CardColor::SPADES } );
+		Action action = strategyManager.execute( testState );
+		if( action.mType != ActionType::ALL_IN ) {
+			std::cout << "Strategy Test 1 failed " << std::endl;
+			testResult = false;
+		}
+	}
+
+	//test 2
+	{
+		GameState testState;
+		testState.hand_cards.push_back( { CardType::A, CardColor::HEARTS } );
+		testState.hand_cards.push_back( { CardType::A, CardColor::SPADES } );
+		Action action = strategyManager.execute( testState );
+		if( action.mType != ActionType::ALL_IN ) {
+			std::cout << "Strategy Test 2 failed " << std::endl;
+			testResult = false;
+		}
+	}
 
     if(testResult){
         std::cout << "Self Test OK" << std::endl;
@@ -133,20 +174,6 @@ bool HandEvaluator::checkInRange(std::vector<CardType> handVec, std::vector<Card
 //////////////////////////////////
 //START of Code section for Gabor
 
-class Action
-{
-public:
-    ActionType  mType;
-    int         mValue;
-};
-
-class Condition
-{
-    ConditionType mType;
-
-public:
-    Condition(ConditionType);
-};
 
 //END of Code section for Gabor
 //////////////////////////////////
@@ -295,8 +322,8 @@ int Player::betRequest(json::Value game_state)
             (gs.has_pair && gs.hand_cards[0].type > CardType::_9)) ? 1000 :
             (
                 (
-                    (gs.position == PositionType::BB || gs.position == PositionType::SB || gs.position == PositionType::D) &&
-                    (gs.action == ActionType::FOLD) &&
+                    (gs.position == PositionType::D) &&
+                    (gs.action == ActionType::FOLD || gs.action == ActionType::CALL) &&
                     (
                         (gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type > CardType::_6) ||
                         (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type > CardType::_6) ||
@@ -304,7 +331,18 @@ int Player::betRequest(json::Value game_state)
                         (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type > CardType::_10 && gs.hand_cards[0].color == gs.hand_cards[1].color) ||
                         (gs.has_pair && gs.hand_cards[0].type > CardType::_5)
                     )
-                ) ? 1000 : 0
+                ) ||
+                (
+                    (gs.position == PositionType::SB || gs.position == PositionType::BB) &&
+                    (gs.action == ActionType::FOLD || gs.action == ActionType::CALL) &&
+                    (
+                        (gs.hand_cards[0].type == CardType::A && gs.hand_cards[1].type > CardType::_2) ||
+                        (gs.hand_cards[1].type == CardType::A && gs.hand_cards[0].type > CardType::_2) ||
+                        (gs.hand_cards[0].type == CardType::K && gs.hand_cards[1].type > CardType::_9) ||
+                        (gs.hand_cards[1].type == CardType::K && gs.hand_cards[0].type > CardType::_9) ||
+                        (gs.has_pair && gs.hand_cards[0].type > CardType::_2)
+                    )
+                )? 1000 : 0
             );
 }
 
