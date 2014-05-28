@@ -79,6 +79,8 @@ enum class ActionType
     RAISE_2,
     RAISE_3,
     RAISE_4,
+    BET_HALF_POT,
+    ALL_IN,
 };
 
 //END of Enums

@@ -2,10 +2,9 @@
 
 #include <initializer_list>
 #include <vector>
-#include <algorithm>
 
 //Continous delivery poker
-#include <string>
+
 const char* Player::VERSION = "Default C++ folding player";
 
 struct Card {
@@ -29,21 +28,8 @@ struct GameState {
 
 //////////////////////////////////
 //START of Code section for Laja
-class HandEvaluator{
-    public:
-        bool isHigherOrEqual(GameState &currentState, std::vector<CardType> &rangeVec);
-
-};
-
-bool HandEvaluator::isHigherOrEqual(GameState &currentState, std::vector<CardType> &rangeVec){
-
-    //sorting the input vector
-    std::sort(rangeVec.begin(), rangeVec.end());
 
 
-
-
-}
 //END of Code section for Laja
 //////////////////////////////////
 
@@ -57,17 +43,131 @@ bool HandEvaluator::isHigherOrEqual(GameState &currentState, std::vector<CardTyp
 
 class Action
 {
-public:
     ActionType  mType;
     int         mValue;
+
+public:
+    Action(ActionType type, int value = 0) : mType(type), mValue(value) {}
 };
 
 class Condition
 {
-    ConditionType mType;
+    ConditionType       mType;
+    std::vector<int>    mArguments;
 
 public:
-    Condition(ConditionType);
+    template <typename T>
+    Condition(ConditionType type, std::initializer_list<T> arguments)
+        : mType(type)
+    {
+        for (auto i: arguments)
+            mArguments.push_back(i);
+
+        if (type == ConditionType::CARDS && mArguments.size() > 0 && mArguments.back() != (int)CardType::SEPARATOR)
+            mArguments.push_back((int)CardType::SEPARATOR);
+
+    }
+
+    bool evaluate(const GameState& state)
+    {
+        switch(mType)
+        {
+        case ConditionType::ACTION:
+            {
+
+            }
+            break;
+        case ConditionType::CARDS:
+            {
+
+            }
+            break;
+        case ConditionType::POSITION:
+            {
+
+            }
+            break;
+        case ConditionType::ROUND:
+            {
+
+            }
+            break;
+        }
+        return true;
+    }
+};
+
+class Trigger
+{
+    Action                  mAction;
+    std::vector<Condition>  mConditions;
+
+public:
+    Trigger(Action action, std::initializer_list<Condition> conditions = {})
+        : mAction(action), mConditions(conditions) {}
+
+    bool evaluate(const GameState& state)
+    {
+        bool result = true;
+        for (Condition i: mConditions)
+        {
+            result &= i.evaluate(state);
+            if (!result)
+                return false;
+        }
+        return true;
+    }
+
+    Action getAction() { return mAction; }
+};
+
+class Strategy
+{
+    Trigger                 mEnteringTrigger;
+    std::vector<Trigger>    mTriggers;
+
+public:
+    Strategy(Trigger enteringTrigger) : mEnteringTrigger(enteringTrigger) {}
+
+    void addTrigger(Trigger trigger) { mTriggers.push_back(trigger); }
+
+    bool evaluate(const GameState& state)
+    {
+        return mEnteringTrigger.evaluate(state);
+    }
+
+    Action execute(const GameState& state)
+    {
+        for (Trigger i: mTriggers)
+        {
+            if (i.evaluate(state))
+                return i.getAction();
+        }
+
+        return mEnteringTrigger.getAction();
+    }
+};
+
+class StrategyManager
+{
+    std::vector<Strategy> mStrategies;
+
+public:
+    void addStrategy(Strategy strategy) { mStrategies.push_back(strategy); }
+
+    Action execute(const GameState& state)
+    {
+        if (mStrategies.size() == 0)
+            return Action(ActionType::FOLD);
+
+        for (Strategy i: mStrategies)
+        {
+            if (i.evaluate(state))
+                return i.execute(state);
+        }
+
+        return Action(ActionType::FOLD);
+    }
 };
 
 //END of Code section for Gabor
@@ -91,7 +191,6 @@ public:
 
 //////////////////////////////////
 //START of Code section for Tibi
-// Rank of the card. Possible values are numbers 2-10 and J,Q,K,A
 CardType decodeCardType(std::string s)
 {
     if (s == "2")
@@ -134,7 +233,6 @@ CardColor decodeCardColor(std::string s)
     if (s == "diamonds")
         return CardColor::DIAMONDS;
 }
-
 
 void fillState(GameState& gs, json::Value game_state)
 {
