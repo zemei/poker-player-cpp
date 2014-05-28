@@ -9,6 +9,7 @@
 #include <functional>
 #include <cctype>
 #include <stack>
+#include <iostream>
 
 #ifndef WIN32
 #define _stricmp strcasecmp
@@ -126,7 +127,8 @@ Value& Value::operator [](const std::string& key)
 
 Value& Value::operator [](const char* key)
 {
-	assert(mValueType == ObjectVal);
+    std::cerr << key << std::endl;
+    assert(mValueType == ObjectVal);
 	return mObjectVal[key];
 }
 
