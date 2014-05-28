@@ -2,6 +2,7 @@
 
 #include <initializer_list>
 #include <vector>
+#include <algorithm>
 
 //Continous delivery poker
 #include <string>
@@ -19,6 +20,8 @@ struct GameState {
     bool has_A;
     bool has_pair;
 
+    PositionType position;
+
     std::vector<Card> hand_cards;
     std::vector<Card> comm_cards;
 };
@@ -26,8 +29,21 @@ struct GameState {
 
 //////////////////////////////////
 //START of Code section for Laja
+class HandEvaluator{
+    public:
+        bool isHigherOrEqual(GameState &currentState, std::vector<CardType> &rangeVec);
+
+};
+
+bool HandEvaluator::isHigherOrEqual(GameState &currentState, std::vector<CardType> &rangeVec){
+
+    //sorting the input vector
+    std::sort(rangeVec.begin(), rangeVec.end());
 
 
+
+
+}
 //END of Code section for Laja
 //////////////////////////////////
 
@@ -41,91 +57,17 @@ struct GameState {
 
 class Action
 {
+public:
     ActionType  mType;
     int         mValue;
-
-public:
-    Action(ActionType type, int value = 0) : mType(type), mValue(value) {}
 };
 
 class Condition
 {
-    ConditionType       mType;
-    std::vector<int>    mArguments;
+    ConditionType mType;
 
 public:
-    template <typename T>
-    Condition(ConditionType type, std::initializer_list<T> arguments)
-        : mType(type)
-    {
-        for (auto i: arguments)
-            mArguments.push_back(i);
-
-        if (type == ConditionType::CARDS && mArguments.size() > 0 && mArguments.back() != (int)CardType::SEPARATOR)
-            mArguments.push_back((int)CardType::SEPARATOR);
-
-    }
-
-    bool evaluate(const GameState& state)
-    {
-        switch(mType)
-        {
-        case ConditionType::ACTION:
-            {
-
-            }
-            break;
-        case ConditionType::CARDS:
-            {
-
-            }
-            break;
-        case ConditionType::POSITION:
-            {
-
-            }
-            break;
-        case ConditionType::ROUND:
-            {
-
-            }
-            break;
-        }
-        return true;
-    }
-};
-
-class Trigger
-{
-    Action                  mAction;
-    std::vector<Condition>  mConditions;
-
-public:
-    Trigger(Action action, std::initializer_list<Condition> conditions = {})
-        : mAction(action), mConditions(conditions) {}
-
-    bool evaluate(const GameState& state)
-    {
-        bool result = true;
-        for (Condition i: mConditions)
-        {
-            result &= i.evaluate(state);
-            if (!result)
-                return false;
-        }
-        return true;
-    }
-
-    Action getAction() { return mAction; }
-};
-
-class Strategy
-{
-    Trigger                 mEnteringTrigger;
-    std::vector<Trigger>    mTriggers;
-
-public:
-    Strategy(Trigger enteringTrigger) : mEnteringTrigger(enteringTrigger) {}
+    Condition(ConditionType);
 };
 
 //END of Code section for Gabor
@@ -204,8 +146,8 @@ void fillState(GameState& gs, json::Value game_state)
     gs.has_A = me["hand"]["hole_cards"].ToArray()[0]["rank"].ToString() == "A" || me["hand"]["hole_cards"].ToArray()[1]["rank"].ToString() == "A";
     gs.has_pair = me["hand"]["hole_cards"].ToArray()[0]["rank"].ToString() == me["hand"]["hole_cards"].ToArray()[1]["rank"].ToString();
 
-    gs.hand_cards.push_back({decodeCardType(me["hand"]["hole_cards"].ToArray()[0]["rank"].ToString()), decodeCardColor(me["hand"]["hole_cards"].ToArray()[0]["suite"].ToString())});
-    gs.hand_cards.push_back({decodeCardType(me["hand"]["hole_cards"].ToArray()[1]["rank"].ToString()), decodeCardColor(me["hand"]["hole_cards"].ToArray()[1]["suite"].ToString())});
+    gs.hand_cards.push_back({decodeCardType(me["hand"]["hole_cards"].ToArray()[0]["rank"].ToString()), decodeCardColor(me["hand"]["hole_cards"].ToArray()[0]["suit"].ToString())});
+    gs.hand_cards.push_back({decodeCardType(me["hand"]["hole_cards"].ToArray()[1]["rank"].ToString()), decodeCardColor(me["hand"]["hole_cards"].ToArray()[1]["suit"].ToString())});
 }
 
 int Player::betRequest(json::Value game_state)
